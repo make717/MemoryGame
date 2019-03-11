@@ -1,5 +1,5 @@
 # Memory Game "Simon Says"
-# 1/19/2019 - For Make717 Board (SAMD21)
+# 3/10/2019 - For Make717 Board (SAMD21)
 
 import time
 import adafruit_dotstar
@@ -13,9 +13,9 @@ from random import randint
 num_pixels = 4
 pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.2, auto_write=False)
 pattern = []
-sim_speed = 0.5
-MAX_TIME = 10  # in seconds
-MAX_ROUNDS = 8
+sim_speed = 0.25
+MAX_TIME = 5  # in seconds
+MAX_ROUNDS = 100
 
 # Setup Sound
 buzzer = pulseio.PWMOut(board.D11, variable_frequency=True)
@@ -31,33 +31,33 @@ BLACK = (0, 0, 0)
 
 # Pixels/LEDs
 PIXEL_LEFT = 0
-PIXEL_RIGHT = 1
-PIXEL_TOP = 2
+PIXEL_RIGHT = 2
+PIXEL_TOP = 1
 PIXEL_BOTTOM = 3
 SIM = [
     { 
-        'button': touchio.TouchIn(board.A5),
+        'button': touchio.TouchIn(board.A0),
         'light': PIXEL_LEFT,
         'color': GREEN,
-        'tone': 3729
+        'tone': 995
     },
     {
-        'button': touchio.TouchIn(board.A0),
+        'button': touchio.TouchIn(board.A1),
         'light': PIXEL_RIGHT,
         'color': YELLOW,
-        'tone': 3952
+        'tone': 939
     },
         { 
         'button': touchio.TouchIn(board.A4),
         'light': PIXEL_TOP,
         'color': BLUE,
-        'tone': 4186
+        'tone': 837
     },
     {
-        'button': touchio.TouchIn(board.A2),
+        'button': touchio.TouchIn(board.A5),
         'light': PIXEL_BOTTOM,
         'color': RED,
-        'tone': 4435
+        'tone': 790
     }
 ]
 
@@ -65,7 +65,7 @@ SIM = [
 def setup():
     pixels.fill((0, 0, 0))
     pixels.show()
-    buzzer.frequency = 440
+    buzzer.frequency = 1500
     buzzer.duty_cycle = ON
     time.sleep(0.5)
     buzzer.duty_cycle = OFF
