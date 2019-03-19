@@ -1,5 +1,7 @@
-# Memory Game "Simon Says"
-# 3/10/2019 - For Make717 Board (SAMD21)
+# Startup LED Badge
+# 3/16/2019 - For Make717 Board (SAMD21)
+# Functions examples
+# https://learn.adafruit.com/circuitpython-essentials/circuitpython-dotstar
 
 import time
 import adafruit_dotstar
@@ -7,187 +9,97 @@ import board
 import pulseio
 import touchio
 from random import randint
+import game
 
-
-# Globals
+# Globals based on our board
 num_pixels = 4
-pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.2, auto_write=False)
+pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.05, auto_write=False)
 pattern = []
-sim_speed = 0.25
-MAX_TIME = 5  # in seconds
-MAX_ROUNDS = 100
 
-# Setup Sound
-buzzer = pulseio.PWMOut(board.D11, variable_frequency=True)
-OFF = 0
-ON = 2**15
-    
-# Colors
-RED = (0x10, 0, 0)
-YELLOW = (0x10, 0x10, 0)
-GREEN = (0, 0x10, 0)
-BLUE = (0, 0, 0x10)
-BLACK = (0, 0, 0)
+# Define the RGB colors we'll be using
+RED = (255, 0, 0)
+YELLOW = (255, 150, 0)
+ORANGE = (255, 40, 0)
+GREEN = (0, 255, 0)
+TEAL = (0, 255, 120)
+CYAN = (0, 255, 255)
+BLUE = (0, 0, 255)
+PURPLE = (180, 0, 255)
+MAGENTA = (255, 0, 20)
+WHITE = (255, 255, 255)
 
-# Pixels/LEDs
-PIXEL_LEFT = 0
-PIXEL_RIGHT = 2
-PIXEL_TOP = 1
-PIXEL_BOTTOM = 3
-SIM = [
-    { 
-        'button': touchio.TouchIn(board.A0),
-        'light': PIXEL_LEFT,
-        'color': GREEN,
-        'tone': 995
-    },
-    {
-        'button': touchio.TouchIn(board.A1),
-        'light': PIXEL_RIGHT,
-        'color': YELLOW,
-        'tone': 939
-    },
-        { 
-        'button': touchio.TouchIn(board.A4),
-        'light': PIXEL_TOP,
-        'color': BLUE,
-        'tone': 837
-    },
-    {
-        'button': touchio.TouchIn(board.A5),
-        'light': PIXEL_BOTTOM,
-        'color': RED,
-        'tone': 790
-    }
-]
+# Function for color transitions
+def wheel(pos):
+    # Input a value 0 to 255 to get a color value.
+    # The colours are a transition r - g - b - back to r.
+    if pos < 0 or pos > 255:
+        return (0, 0, 0)
+    if pos < 85:
+        return (255 - pos * 3, pos * 3, 0)
+    if pos < 170:
+        pos -= 85
+        return (0, 255 - pos * 3, pos * 3)
+    pos -= 170
+    return (pos * 3, 0, 255 - pos * 3)
 
-    
-def setup():
-    pixels.fill((0, 0, 0))
-    pixels.show()
-    buzzer.frequency = 1500
-    buzzer.duty_cycle = ON
-    time.sleep(0.5)
-    buzzer.duty_cycle = OFF
-
-
-def make_pattern(level):
-    choice = randint(0, (len(SIM) - 1))
-    pattern.append(choice)
-
-
-def show_pattern():
-    for p in pattern:
-        start_tone(SIM[p]['tone'])
-        pixels[SIM[p]['light']] = SIM[p]['color']
+# Color transition each LED in a cycle
+def rainbow_cycle(wait):
+    for j in range(32):
+        for i in range(num_pixels):
+            rc_index = (i * 256 // num_pixels) + j
+            pixels[i] = wheel(rc_index & 255)
         pixels.show()
-        time.sleep(sim_speed * 2)
-        stop_tone()
-        pixels[SIM[p]['light']] = BLACK
-        pixels.show()
-        time.sleep(sim_speed)
+        time.sleep(wait)
 
-
-def user_input_loop():
-    start_time = time.monotonic()
-    last_press = None
-    pattern_place = 0
-    
-    while time.monotonic() < (start_time + MAX_TIME):
-        x = check_button_press()
-        if x != last_press:
-            
-            # If the button was released, turn out lights
-            if x is None:
-                pixels.fill((0, 0, 0))
-                pixels.show()
-                last_press = None
-                stop_tone()
-                
-                # Check for win state
-                if pattern_place == len(pattern):
-                    time.sleep(.6)
-                    return True
-                continue
-
-            # This should be a new button press
-            # light up the color next to button
-            pixels.fill((0, 0, 0))
-            pixels[SIM[x]['light']] = SIM[x]['color']
-            pixels.show()
-            start_tone(SIM[x]['tone'])
-            
-            # check if it was the right button
-            if pattern[pattern_place] == x:
-                # Good choice
-                print("Good choice")
-                pattern_place += 1
-            else:
-                time.sleep(.2)
-                stop_tone()
-                wrong_choice(pattern[pattern_place], x)
-                return False
-    
-        last_press = x
-    print("Time Out")
-    wrong_choice(pattern[pattern_place], 0)
-    return False
-
-    
+# Use the game code to detect button presses
 def check_button_press():
-    for i in range(len(SIM)):
-        if SIM[i]["button"].value:
-            return i
-    return None
+    if game.check_button_press():
+        print("Go to Game")
+        pixels.deinit()
+        game.setup()
+        game.main()
 
+# Make all the lights display a color
+def color_fill(color, wait):
+    pixels.fill(color)
+    pixels.show()
+    check_button_press()
+    time.sleep(wait)
 
-def wrong_choice(correct, incorrect):
-    print("Wrong choice")
-    start_tone(300)
-    # Blink the right choice a few times
-    for i in range(5):
-        pixels.fill((0, 0x10, 0x10))
-        pixels[SIM[correct]['light']] = SIM[correct]['color']
+# Light up one LED at a time clockwise
+def chase(color, wait):
+    for i in range(num_pixels):
+        pixels.fill((0,0,0))
+        pixels[i] = color
         pixels.show()
-        time.sleep(.25)
-        pixels.fill((0, 0, 0))
-        pixels.show()       
-        time.sleep(.25)
-    stop_tone()
+        check_button_press()
+        time.sleep(wait)
 
-        
-def main():
-    global sim_speed, pattern
-    
-    while True:
-        for i in range(MAX_ROUNDS):
-            make_pattern(i)
-            show_pattern()
-            good_round = user_input_loop()
-            
-            # Check for incorrect answer
-            if not good_round:
-                break
-            
-            # Speed up each time we add a new pattern
-            sim_speed = sim_speed - 0.05
-            time.sleep(1.0)
+# Light up one LED at a time counter-clockwise
+def chaseback(color,wait):
+    for i in range(num_pixels):
+        i = (num_pixels -1) - i
+        pixels.fill((0,0,0))
+        pixels[i] = color
+        pixels.show()
+        check_button_press()
+        time.sleep(wait)
 
-        print("Starting new round")    
-        pattern = []
-        sim_speed = 0.5
-        time.sleep(3)
+# Powersave with checking for button presses
+def goblack(wait):
+    pixels.fill((0,0,0))
+    pixels.show()
+    for i in range(wait):
+        check_button_press()
+        time.sleep(wait)
 
-
-# Audio Code
-def start_tone(frequency):
-    buzzer.frequency = frequency 
-    buzzer.duty_cycle = ON
-        
-def stop_tone():
-    buzzer.duty_cycle = OFF
-
-
-# Start main code
-setup()
-main()
+# Main loop - Do these LED patterns
+while True:
+    chase(RED, 0.05)
+    chase(YELLOW, 0.05)
+    chase(GREEN, 0.05)
+    chaseback(BLUE, 0.05)
+    chaseback(PURPLE, 0.05)
+    color_fill(MAGENTA, 0.5)
+    rainbow_cycle(0)
+    goblack(3)
