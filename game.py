@@ -1,5 +1,5 @@
 # Memory Game "Simon Says"
-# 3/18/2019 - For Make717 Board (SAMD21)
+# 3/20/2019 - For Make717 Board (SAMD21)
 
 import time
 import adafruit_dotstar
@@ -19,7 +19,7 @@ MAX_TIME = 5  # in seconds
 MAX_ROUNDS = 100
 
 # Setup Sound output and variables
-buzzer = pulseio.PWMOut(board.D11, variable_frequency=True)
+buzzer = pulseio.PWMOut(board.BUZZER, variable_frequency=True)
 OFF = 0
 ON = 2**15
     
@@ -39,25 +39,25 @@ PIXEL_BOTTOM = 3
 # Map the buttons, LEDs, Colors and Tone
 SIM = [
     { 
-        'button': touchio.TouchIn(board.A0),
+        'button': touchio.TouchIn(board.B2),
         'light': PIXEL_LEFT,
         'color': GREEN,
         'tone': 995
     },
     {
-        'button': touchio.TouchIn(board.A1),
+        'button': touchio.TouchIn(board.B3),
         'light': PIXEL_RIGHT,
         'color': YELLOW,
         'tone': 939
     },
         { 
-        'button': touchio.TouchIn(board.A4),
+        'button': touchio.TouchIn(board.B4),
         'light': PIXEL_TOP,
         'color': BLUE,
         'tone': 837
     },
     {
-        'button': touchio.TouchIn(board.A5),
+        'button': touchio.TouchIn(board.B1),
         'light': PIXEL_BOTTOM,
         'color': RED,
         'tone': 790
@@ -150,10 +150,12 @@ def check_button_press():
 # What to do if the wrong pattern is entered.
 def wrong_choice(correct, incorrect):
     print("Wrong choice")
-    start_tone(300)
+    pixels.fill((0x10, 0x0, 0x0))
+    pixels.show()
+    play_sad_song()
     # Blink the right choice a few times
     for i in range(5):
-        pixels.fill((0, 0x10, 0x10))
+        pixels.fill((0x10, 0x0, 0x0))
         pixels[SIM[correct]['light']] = SIM[correct]['color']
         pixels.show()
         time.sleep(.25)
@@ -161,6 +163,21 @@ def wrong_choice(correct, incorrect):
         pixels.show()       
         time.sleep(.25)
     stop_tone()
+
+# Try making your own song. You can find notes/tones at
+# https://www.arduino.cc/en/Tutorial/toneMelody
+def play_sad_song():
+    start_tone(1047)
+    time.sleep(.5)
+    stop_tone()
+    start_tone(988)
+    time.sleep(.5)
+    stop_tone()
+    start_tone(932)
+    time.sleep(.5)
+    stop_tone()
+    start_tone(880)
+    # make sure stop_tone() happens in your calling code
 
 # The main game code lives here        
 def main():

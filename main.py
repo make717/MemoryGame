@@ -1,5 +1,5 @@
 # Startup LED Badge
-# 3/16/2019 - For Make717 Board (SAMD21)
+# 3/20/2019 - For Make717 Board (SAMD21)
 # Functions examples
 # https://learn.adafruit.com/circuitpython-essentials/circuitpython-dotstar
 
@@ -21,12 +21,22 @@ RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
 ORANGE = (255, 40, 0)
 GREEN = (0, 255, 0)
-TEAL = (0, 255, 120)
-CYAN = (0, 255, 255)
 BLUE = (0, 0, 255)
 PURPLE = (180, 0, 255)
 MAGENTA = (255, 0, 20)
+
+# HACKING IDEA: What other colors could you create?
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Use the game code to detect button presses
+def check_button_press():
+    # HACKING IDEA: What else could you call from the game code?
+    if game.check_button_press():
+        print("Go to Game")
+        pixels.deinit()
+        game.setup()
+        game.main()
 
 # Function for color transitions
 def wheel(pos):
@@ -44,20 +54,14 @@ def wheel(pos):
 
 # Color transition each LED in a cycle
 def rainbow_cycle(wait):
+    # HACKING IDEA: Could you show more than 32 colors?
     for j in range(32):
         for i in range(num_pixels):
             rc_index = (i * 256 // num_pixels) + j
             pixels[i] = wheel(rc_index & 255)
         pixels.show()
+        check_button_press()
         time.sleep(wait)
-
-# Use the game code to detect button presses
-def check_button_press():
-    if game.check_button_press():
-        print("Go to Game")
-        pixels.deinit()
-        game.setup()
-        game.main()
 
 # Make all the lights display a color
 def color_fill(color, wait):
@@ -95,6 +99,7 @@ def goblack(wait):
 
 # Main loop - Do these LED patterns
 while True:
+    # HACKING IDEA: make your own pattern for the lights
     chase(RED, 0.05)
     chase(YELLOW, 0.05)
     chase(GREEN, 0.05)
