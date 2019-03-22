@@ -95,7 +95,7 @@ def goblack(wait):
     pixels.show()
     for i in range(wait):
         check_button_press()
-        time.sleep(wait)
+        time.sleep(1)
 
 # Main loop - Do these LED patterns
 while True:
