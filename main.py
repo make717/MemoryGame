@@ -10,6 +10,7 @@ import pulseio
 import touchio
 from random import randint
 import game
+import soundboard
 
 # Globals based on our board
 num_pixels = 4
@@ -32,11 +33,16 @@ BLACK = (0, 0, 0)
 # Use the game code to detect button presses
 def check_button_press():
     # HACKING IDEA: What else could you call from the game code?
-    if game.check_button_press():
-        print("Go to Game")
+    press = game.check_button_press()
+    if press is not None:
         pixels.deinit()
-        game.setup()
-        game.main()
+        if press < 2 :
+            print("Starting Game")
+            game.setup()
+            game.main()
+        else:
+            print("Starting Soundboard")
+            soundboard.main()
 
 # Function for color transitions
 def wheel(pos):

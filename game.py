@@ -19,7 +19,7 @@ MAX_TIME = 5  # in seconds
 MAX_ROUNDS = 100
 
 # Setup Sound output and variables
-buzzer = pulseio.PWMOut(board.BUZZER, variable_frequency=True)
+buzzer = None
 OFF = 0
 ON = 2**15
     
@@ -66,8 +66,9 @@ SIM = [
 
 # Setup the LEDS and let the user know we're about to start a game
 def setup():
-    global pixels
-    pixels =  adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.2, auto_write=False)
+    global pixels, buzzer
+    pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.2, auto_write=False)
+    buzzer = pulseio.PWMOut(board.BUZZER, variable_frequency=True)
     pixels.fill((80, 80, 80))
     pixels.show()
     buzzer.frequency = 1500
