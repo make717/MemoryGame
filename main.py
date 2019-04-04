@@ -14,7 +14,7 @@ import soundboard
 
 # Globals based on our board
 num_pixels = 4
-pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.05, auto_write=False)
+pixels = adafruit_dotstar.DotStar(board.SDA, board.SCL, num_pixels, brightness=0.25, auto_write=False)
 pattern = []
 
 # Define the RGB colors we'll be using
